@@ -1,0 +1,63 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9f3758f8f58fdef43803eb9be1df0608, type: 3}
+  m_Name: PhotonServerSettings
+  m_EditorClassIdentifier: 
+  AppSettings:
+    AppIdRealtime: 35758e20-166f-46f9-b467-d66fd9b15091
+    AppIdFusion: 
+    AppIdChat: 
+    AppIdVoice: 
+    AppVersion: 
+    UseNameServer: 1
+    FixedRegion: 
+    Server: 
+    Port: 0
+    ProxyServer: 
+    Protocol: 0
+    EnableProtocolFallback: 1
+    AuthMode: 0
+    EnableLobbyStatistics: 0
+    NetworkLogging: 1
+  DevRegion: kr
+  PunLogging: 0
+  EnableSupportLogger: 0
+  RunInBackground: 1
+  StartInOfflineMode: 0
+  RpcList:
+  - ClickRpc
+  - DestroyRpc
+  - DestroySpaceship
+  - Fire
+  - RespawnSpaceship
+  - dkahffktlqkf
+  - start_game
+  - sync_value
+  - call_sync_value
+  - check_index
+  - render_car
+  - call_sync_car
+  - sync_car
+  - end_game
+  - retire_count
+  - ttest
+  - remove_object
+  - render_sync_car
+  - call_lobby_sync_car
+  - lobby_sync_car
+  - button_RPC
+  - call_sync_data
+  - sync_data
+  - start_call
+  DisableAutoOpenWizard: 1
+  ShowSettings: 0
+  DevRegionSetOnce: 1

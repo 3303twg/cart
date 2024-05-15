@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1045 &1
+EditorBuildSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Scenes:
+  - enabled: 0
+    path: Assets/BEDRILL/Modular_Track_Free/Example.unity
+    guid: cd368012ba25286469d1ea9b8a66bb06
+  - enabled: 1
+    path: Assets/Scenes/title.unity
+    guid: 74c749261f215cf41a50da3637765229
+  - enabled: 1
+    path: Assets/Scenes/lobby.unity
+    guid: f28e3946633239f4198405b0f46fec85
+  - enabled: 1
+    path: Assets/Scenes/Main.unity
+    guid: 5eb66ddf42d3d804481a552723b9ec2a
+  m_configObjects: {}
