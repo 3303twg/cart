@@ -107,21 +107,19 @@ public class gamemanager : MonoBehaviourPun, IPunObservable
 
         if (stream.IsWriting) // 데이터를 보내는 클라이언트
         {
-            stream.SendNext(PhotonNetwork.LocalPlayer.ActorNumber);
+            int clientID = PhotonNetwork.LocalPlayer.ActorNumber;
+            stream.SendNext(clientID);
 
             
             stream.SendNext(time);
             stream.SendNext(retire_timer);
             
 
-            /*stream.SendNext(lap_cnt);
-            stream.SendNext(line_checked_index);
-            stream.SendNext(next_line_distance);*/
-
             /*
-            stream.SendNext(lap_cnt_list_data);
-            stream.SendNext(line_checked_index_list);
-            stream.SendNext(next_line_distance_list);
+            stream.SendNext(lap_cnt);
+            stream.SendNext(line_checked_index);
+            stream.SendNext(next_line_distance);
+            Debug.Log("송신중인 id : " + clientID);
             */
         }
         else // 데이터를 받는 클라이언트
@@ -136,16 +134,12 @@ public class gamemanager : MonoBehaviourPun, IPunObservable
             
 
 
-            /*lap_cnt_list_data[clientID -1] = (int)stream.ReceiveNext();
-            line_checked_index_list[clientID -1] = (int)stream.ReceiveNext();
-            next_line_distance_list[clientID -1] = (float)stream.ReceiveNext();*/
-
             /*
-            lap_cnt_list_data = (int[])stream.ReceiveNext();
-            line_checked_index_list = (int[])stream.ReceiveNext();
-            next_line_distance_list = (float[])stream.ReceiveNext();
+            lap_cnt_list_data[clientID -1] = (int)stream.ReceiveNext();
+            line_checked_index_list[clientID -1] = (int)stream.ReceiveNext();
+            next_line_distance_list[clientID -1] = (float)stream.ReceiveNext();
+            Debug.Log("수신받은 id : " + clientID);
             */
-
         }
         
     }
@@ -248,8 +242,6 @@ public class gamemanager : MonoBehaviourPun, IPunObservable
     public Text start_timer_text;
     public bool allClientsLoaded = false;
 
-    // Update is called once per frame
-
 
     [PunRPC]
     void start_call()
@@ -276,21 +268,43 @@ public class gamemanager : MonoBehaviourPun, IPunObservable
     }
 
 
+    private float time_temp = 0f;
+    bool game_flag = false;
     void Update()
     {
         //playerObjects = GameObject.FindGameObjectsWithTag("gamemanager");
+
+        if(game_flag == true)
+        {
+            return;
+        }
 
         lap_cnt_list_data[PhotonNetwork.LocalPlayer.ActorNumber - 1] = lap_cnt;
         line_checked_index_list[PhotonNetwork.LocalPlayer.ActorNumber - 1] = line_checked_index;
         next_line_distance_list[PhotonNetwork.LocalPlayer.ActorNumber - 1] = next_line_distance;
 
-        if (move_scene_flag == false)
-        {
-            photonView.RPC("call_sync_data", RpcTarget.MasterClient, PhotonNetwork.LocalPlayer.ActorNumber - 1, lap_cnt, line_checked_index, next_line_distance);
 
-            next_line_distance = get_distance(my_car, line_checked_index - 1);
+
+
+        if (retire_flag == false)
+        {
+            if (start_flag == true)
+            {
+
+                if (Time.time - time_temp >= 0.55f)
+                //if(true)
+                {
+                    //호출이 너무많으면 버퍼에 쌓여서 일정시간마다 호출하는것으로 명시
+                    photonView.RPC("call_sync_data", RpcTarget.MasterClient, PhotonNetwork.LocalPlayer.ActorNumber - 1, lap_cnt, line_checked_index, next_line_distance);
+
+                    next_line_distance = get_distance(my_car, line_checked_index - 1);
+                    time_temp = Time.time;
+                }
+                
+            }
         }
 
+        
 
 
 
@@ -416,7 +430,7 @@ public class gamemanager : MonoBehaviourPun, IPunObservable
 
 
                             //PhotonNetwork.LoadLevel("lobby");
-
+                            PhotonNetwork.OpCleanActorRpcBuffer(PhotonNetwork.LocalPlayer.ActorNumber);
                             photonView.RPC("end_game", RpcTarget.All);
                         }
                     }
@@ -520,13 +534,46 @@ public class gamemanager : MonoBehaviourPun, IPunObservable
     [PunRPC]
     void end_game()
     {
-        PhotonNetwork.DestroyPlayerObjects(PhotonNetwork.LocalPlayer.ActorNumber);
+
+        game_flag = true;
+        PhotonNetwork.IsMessageQueueRunning = false;
+        
+        if (photonView.IsMine)
+        {
+            PhotonNetwork.DestroyPlayerObjects(PhotonNetwork.LocalPlayer.ActorNumber);
+            PhotonNetwork.RemoveRPCs(PhotonNetwork.LocalPlayer);
+        }
+        PhotonNetwork.OpCleanActorRpcBuffer(PhotonNetwork.LocalPlayer.ActorNumber);
+        if (PhotonNetwork.IsMasterClient)
+        {
+            // 다른 오브젝트에 대한 RPC 초기화
+            PhotonView[] allPhotonViews = GameObject.FindObjectsOfType<PhotonView>();
+            foreach (PhotonView pv in allPhotonViews)
+            {
+                // 현재 오브젝트와 다른 오브젝트의 PhotonView는 이미 초기화했으므로 건너뜁니다.
+                if (pv != photonView)
+                {
+                    // 다른 오브젝트의 PhotonView를 초기화합니다.
+                    PhotonNetwork.RemoveRPCs(pv);
+                }
+            }
+        }
+
+        
+
+
+        //StartCoroutine(LoadNextSceneAfterDelay("lobby", 3.0f));
+
 
         PhotonNetwork.LoadLevel("lobby");
 
     }
 
-
+    IEnumerator LoadNextSceneAfterDelay(string sceneName, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        PhotonNetwork.LoadLevel(sceneName);
+    }
 
     public void test()
     {
@@ -702,7 +749,8 @@ public class gamemanager : MonoBehaviourPun, IPunObservable
     [PunRPC]
     void call_sync_data(int player_index, int lap_cnt_data, int line_checked_index_data, float next_line_distance_data)
     {
-
-        photonView.RPC("sync_data", RpcTarget.All, player_index , lap_cnt_data, line_checked_index_data, next_line_distance_data);
+        photonView.RPC("sync_data", RpcTarget.All, player_index, lap_cnt_data, line_checked_index_data, next_line_distance_data);
     }
+
+
 }

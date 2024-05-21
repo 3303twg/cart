@@ -81,7 +81,11 @@ public class lobby_manager : MonoBehaviourPun, IPunObservable
         }
         */
     }
-    
+
+    private void Awake()
+    {
+        PhotonNetwork.RemoveRPCs(PhotonNetwork.LocalPlayer);
+    }
 
     private void Start()
     {
